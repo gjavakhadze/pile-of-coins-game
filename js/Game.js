@@ -1,10 +1,16 @@
 var game = new Phaser.Game(1100, 600, Phaser.AUTO, 'wrapper', {preload: preload, create: create}),
 	graphics,
 	coinBags,
-	coinPile,
+	humanCoinPile,
+	pcCoinPile,
 	gameInfoText,
-	COIN_BAGS_COUNT = 10,
-	TOOLBAR_HEIGHT = 20,
+	humanImage,
+	pcImage,
+	lastHumanAction,
+	lastPcAction,
+	COIN_BAGS_COUNT = 1,
+	TOOLBAR_HEIGHT = 80,
+	OFFSET_FROM_RIGHT = 50,
 	OFFSET_FROM_LEFT = 50,
 	OFFSET_FROM_TOP = 50;
 
@@ -14,6 +20,8 @@ function preload() {
 	game.load.image('pileOfCoins', 'assets/pileOfCoins.png');
 	game.load.image('arrowDown', 'assets/arrowDown.png');
 	game.load.image('arrowUp', 'assets/arrowUp.png');
+	game.load.image('human', 'assets/human.png');
+	game.load.image('pc', 'assets/desktopComputer.png');
 }
 
 function create() {
@@ -23,11 +31,11 @@ function create() {
 	};
 
 	initGraphics();
-	initGameInfoText();
-	initCoinPile();
+	initToolBar();
+	initCoinPiles();
 	initCoinBags();
 
-	drawCoinPile();
+	drawCoinPiles();
 	drawCoinBags();
 
 	game.stage.backgroundColor = '#b37607';
@@ -37,42 +45,87 @@ function initGraphics() {
 	graphics = game.add.graphics(0, 0);
 }
 
-function initGameInfoText() {
-	gameInfoText = game.add.text(0, 0, 'ერთი ორი სამი', {
-		fill: 'white',
-		align: 'center',
-		font: 'bold 24px Sylfaen',
-		boundsAlignH: 'center',
-		boundsAlignV: 'middle'
-	});
-	gameInfoText.x = game.world.centerX - gameInfoText.width / 2;
-	gameInfoText.y = TOOLBAR_HEIGHT - gameInfoText.height / 2;
-}
-
-function initCoinPile() {
-	coinPile = {};
-	coinPile.pileImage = game.add.image(0, 0, 'pileOfCoins');
-	coinPile.pileImage.width = 300;
-	coinPile.pileImage.height = 150;
-	coinPile.pileImage.x = game.world.centerX - coinPile.pileImage.width / 2;
-	coinPile.pileImage.y = TOOLBAR_HEIGHT + 50;
-	coinPile.pileImage.visible = false;
-
-	coinPile.amount = random(0, 100);
-	coinPile.amountText = game.add.text(0, 0, '', {
+function initToolBar() {
+	gameInfoText = game.add.text(0, 0, '', {
 		fill: 'white',
 		align: 'center',
 		font: 'bold 30px Sylfaen',
 		boundsAlignH: 'center',
 		boundsAlignV: 'middle'
 	});
-	coinPile.amountText.x = coinPile.pileImage.x + coinPile.pileImage.width / 2 - coinPile.amountText.width / 2;
-	coinPile.amountText.y = coinPile.pileImage.y + coinPile.pileImage.height + 10;
-	coinPile.updateLayout = function () {
+	gameInfoText.x = game.world.centerX - gameInfoText.width / 2;
+	gameInfoText.y = TOOLBAR_HEIGHT - gameInfoText.height / 2;
+	gameInfoText.updateLayout = function () {
+		this.x = game.world.centerX - this.width / 2;
+		this.y = TOOLBAR_HEIGHT - this.height / 2;
+	};
+}
+
+function initCoinPiles() {
+	humanCoinPile = {};
+	humanCoinPile.pileImage = game.add.image(0, 0, 'pileOfCoins');
+	humanCoinPile.pileImage.width = 300;
+	humanCoinPile.pileImage.height = 150;
+	humanCoinPile.pileImage.x = OFFSET_FROM_LEFT;
+	humanCoinPile.pileImage.y = TOOLBAR_HEIGHT + 50;
+	humanCoinPile.pileImage.visible = false;
+
+	humanImage = game.add.image(0, 0, 'human');
+	humanImage.width = 120;
+	humanImage.height = 120;
+	humanImage.x = humanCoinPile.pileImage.x + humanCoinPile.pileImage.width / 2 - humanImage.width / 2;
+	humanImage.y = humanCoinPile.pileImage.y - humanImage.height;
+	humanImage.alpha = 1.0;
+	humanImage.visible = false;
+
+	humanCoinPile.amount = random(0, 100);
+	humanCoinPile.amountText = game.add.text(0, 0, '', {
+		fill: 'white',
+		align: 'center',
+		font: 'bold 30px Sylfaen',
+		boundsAlignH: 'center',
+		boundsAlignV: 'middle'
+	});
+	humanCoinPile.amountText.x = humanCoinPile.pileImage.x + humanCoinPile.pileImage.width / 2 - humanCoinPile.amountText.width / 2;
+	humanCoinPile.amountText.y = humanCoinPile.pileImage.y + humanCoinPile.pileImage.height + 10;
+	humanCoinPile.updateLayout = function () {
 		this.amountText.x = this.pileImage.x + this.pileImage.width / 2 - this.amountText.width / 2;
 		this.amountText.y = this.pileImage.y + this.pileImage.height + 10;
 	};
-	coinPile.amountText.visible = false;
+	humanCoinPile.amountText.visible = false;
+
+	pcCoinPile = {};
+	pcCoinPile.pileImage = game.add.image(0, 0, 'pileOfCoins');
+	pcCoinPile.pileImage.width = 300;
+	pcCoinPile.pileImage.height = 150;
+	pcCoinPile.pileImage.x = game.width - pcCoinPile.pileImage.width - OFFSET_FROM_RIGHT;
+	pcCoinPile.pileImage.y = TOOLBAR_HEIGHT + 50;
+	pcCoinPile.pileImage.alpha = 0.3;
+	pcCoinPile.pileImage.visible = false;
+
+	pcImage = game.add.image(0, 0, 'pc');
+	pcImage.width = 120;
+	pcImage.height = 120;
+	pcImage.x = pcCoinPile.pileImage.x + pcCoinPile.pileImage.width / 2 - pcImage.width / 2;
+	pcImage.y = pcCoinPile.pileImage.y - pcImage.height;
+	pcImage.alpha = 0.3;
+	pcImage.visible = false;
+
+	pcCoinPile.amount = random(0, 100);
+	pcCoinPile.amountText = game.add.text(0, 0, '', {
+		fill: 'white',
+		align: 'center',
+		font: 'bold 30px Sylfaen',
+		boundsAlignH: 'center',
+		boundsAlignV: 'middle'
+	});
+	pcCoinPile.amountText.x = pcCoinPile.pileImage.x + pcCoinPile.pileImage.width / 2 - pcCoinPile.amountText.width / 2;
+	pcCoinPile.amountText.y = pcCoinPile.pileImage.y + pcCoinPile.pileImage.height + 10;
+	pcCoinPile.updateLayout = function () {
+		this.amountText.x = this.pileImage.x + this.pileImage.width / 2 - this.amountText.width / 2;
+		this.amountText.y = this.pileImage.y + this.pileImage.height + 10;
+	};
+	pcCoinPile.amountText.visible = false;
 }
 
 function initCoinBags() {
@@ -140,8 +193,12 @@ function initCoinBags() {
 			img.alpha = 1.0;
 		});
 		bag.arrowImage.events.onInputDown.add(function (img) {
-			onArrowImageClick(img);
-			onComputerTurn();
+			onArrowImageClick(img, 'human');
+			if (!canMakeAction('pc')) {
+				updateGameInfoText('Game over, you win!', 'green');
+			} else {
+				onComputerTurn();
+			}
 		});
 		bag.arrowImage.visible = false;
 
@@ -175,13 +232,18 @@ function initCoinBags() {
 	}
 }
 
-function drawCoinPile() {
-	coinPile.pileImage.visible = true;
-	coinPile.amountText.visible = true;
+function drawCoinPiles() {
+	humanCoinPile.pileImage.visible = true;
+	humanCoinPile.amountText.visible = true;
+	humanImage.visible = true;
+	humanCoinPile.amountText.text = humanCoinPile.amount;
+	humanCoinPile.updateLayout();
 
-	coinPile.amountText.text = coinPile.amount;
-
-	coinPile.updateLayout();
+	pcCoinPile.pileImage.visible = true;
+	pcCoinPile.amountText.visible = true;
+	pcImage.visible = true;
+	pcCoinPile.amountText.text = pcCoinPile.amount;
+	pcCoinPile.updateLayout();
 }
 
 function drawCoinBags() {
@@ -231,7 +293,7 @@ function onCoinBagIncrease(bag) {
 }
 
 function isCoinChangeAmountAllowed(bag, amount) {
-	if (amount > 0 && amount <= coinPile.amount) {
+	if (amount > 0 && amount <= humanCoinPile.amount) {
 		return true;
 	} else if (amount < 0 && -amount <= bag.amount ) {
 		return true;
@@ -241,18 +303,32 @@ function isCoinChangeAmountAllowed(bag, amount) {
 	return false;
 }
 
-function onArrowImageClick(img) {
+function onArrowImageClick(img, type) {
+	var currentCoinPile = null;
+	if (type === 'human') {
+		currentCoinPile = humanCoinPile;
+	} else if (type === 'pc') {
+		currentCoinPile = pcCoinPile;
+	}
 	if (img.reference.coinChangeAmount > 0) {
-		coinPile.amount -= img.reference.coinChangeAmount;
+		currentCoinPile.amount -= img.reference.coinChangeAmount;
 		img.reference.amount += img.reference.coinChangeAmount;
 		img.reference.coinChangeAmount = 0;
+		lastHumanAction = {
+			index: img.reference.index,
+			amount: img.reference.coinChangeAmount
+		};
 	} else if (img.reference.coinChangeAmount < 0) {
-		coinPile.amount += -img.reference.coinChangeAmount;
+		currentCoinPile.amount += -img.reference.coinChangeAmount;
 		img.reference.amount -= -img.reference.coinChangeAmount;
 		img.reference.coinChangeAmount = 0;
+		lastHumanAction = {
+			index: img.reference.index,
+			amount: img.reference.coinChangeAmount
+		};
 	}
 	drawCoinBag(img.reference);
-	drawCoinPile();
+	drawCoinPiles();
 }
 
 function onComputerTurn() {
@@ -261,44 +337,95 @@ function onComputerTurn() {
 		coinBags[i].arrowImage.inputEnabled = false;
 		coinBags[i].bagImage.alpha = 0.7;
 	}
+	humanImage.alpha = 0.3;
+	humanCoinPile.pileImage.alpha = 0.3;
+	pcImage.alpha = 1.0;
+	pcCoinPile.pileImage.alpha = 1.0;
 	game.time.events.add(Phaser.Timer.SECOND * 2, function () {
 		var optimalTurn = getOptimalTurn();
-		console.log(optimalTurn);
+		if (optimalTurn.amount > 0) {
+			coinBags[optimalTurn.index].coinChangeAmount = optimalTurn.amount;
+		} else {
+			coinBags[optimalTurn.index].coinChangeAmount = -optimalTurn.amount;
+		}
 		coinBags[optimalTurn.index].bagImage.alpha = 1.0;
-		coinBags[optimalTurn.index].coinChangeAmount = -optimalTurn.amount;
 		drawCoinBag(coinBags[optimalTurn.index]);
 		game.time.events.add(Phaser.Timer.SECOND * 5, function () {
-			onArrowImageClick(coinBags[optimalTurn.index].arrowImage);
+			lastPcAction = optimalTurn;
+			onArrowImageClick(coinBags[optimalTurn.index].arrowImage, 'pc');
 			for (var i = 0; i < coinBags.length; i++) {
 				coinBags[i].bagImage.inputEnabled = true;
 				coinBags[i].arrowImage.inputEnabled = true;
 				coinBags[i].bagImage.alpha = 0.7;
+			}
+			humanImage.alpha = 1.0;
+			humanCoinPile.pileImage.alpha = 1.0;
+			pcImage.alpha = 0.3;
+			pcCoinPile.pileImage.alpha = 0.3;
+
+			if (!canMakeAction('human')) {
+				updateGameInfoText('Game over, you lost!', 'red');
 			}
 		});
 	});
 }
 
 function getOptimalTurn() {
-	var max = 0, xor = 0, index = -1;
-	for (var i = 0; i < coinBags.length; i++) {
-		max = Math.max(coinBags[i].amount);
-	}
-	for (var i = 1; i <= max; i++) {
-
-	}
-	for (var i = 0; i < coinBags.length; i++) {
-		xor ^= coinBags[i].amount;
-	}
-	for (var i = 0; i < coinBags.length; i++) {
-		if (coinBags[i].amount >= xor) {
-			index = i;
-			break;
+	if (lastHumanAction.amount > 0 && lastPcAction !== undefined) {
+		return {
+			index: lastHumanAction.index,
+			amount: -lastHumanAction.amount
 		}
+	}
+	var amount = 0, index = -1, xor = 0;
+
+	for (var i = 0; i < coinBags.length; i++) {
+		xor = xor ^ coinBags[i].amount;
+	}
+	for (var i = 0; i < coinBags.length; i++) {
+		for (var j = 1; j <= coinBags[i].amount; j++) {
+			if (index === -1) {
+				amount = j;
+				index = i;
+			}
+			var currentXor = xor;
+			currentXor = currentXor ^ coinBags[i].amount;
+			currentXor = currentXor ^ (coinBags[i].amount - j);
+			if (currentXor === 0 && j > amount) {
+				amount = j;
+				index = i;
+			}
+		}
+	}
+	if (index === -1) {
+		index = 0;
+		amount = pcCoinPile.amount;
 	}
 	return {
 		index: index,
-		amount: xor
+		amount: amount
 	};
+}
+
+function updateGameInfoText(text, color) {
+	gameInfoText.text = text;
+	gameInfoText.style.fill = color;
+	gameInfoText.updateLayout();
+	console.log(gameInfoText);
+}
+
+function canMakeAction(type) {
+	for (var i = 0; i < coinBags.length; i++) {
+		if (coinBags[i].amount > 0) {
+			return true;
+		}
+	}
+	if (type === 'pc') {
+		return pcCoinPile.amount > 0;
+	} else if (type === 'human') {
+		return humanCoinPile.amount > 0;
+	}
+	return false;
 }
 
 function random(fromNumber, toNumber, toExclude) {
