@@ -1,4 +1,4 @@
-var game = new Phaser.Game(1100, 600, Phaser.AUTO, 'wrapper', {preload: preload, create: create}),
+let game = new Phaser.Game(1100, 600, Phaser.AUTO, 'wrapper', {preload: preload, create: create}),
 	graphics,
 	coinBags,
 	humanCoinPile,
@@ -6,9 +6,7 @@ var game = new Phaser.Game(1100, 600, Phaser.AUTO, 'wrapper', {preload: preload,
 	gameInfoText,
 	humanImage,
 	pcImage,
-	lastHumanAction,
-	lastPcAction,
-	COIN_BAGS_COUNT = 10,
+	COIN_BAGS_COUNT = 2,
 	TOOLBAR_HEIGHT = 80,
 	OFFSET_FROM_RIGHT = 50,
 	OFFSET_FROM_LEFT = 50,
@@ -78,7 +76,7 @@ function initCoinPiles() {
 	humanImage.alpha = 1.0;
 	humanImage.visible = false;
 
-	humanCoinPile.amount = random(0, 100);
+	humanCoinPile.amount = random(0, 10);
 	humanCoinPile.amountText = game.add.text(0, 0, '', {
 		fill: 'white',
 		align: 'center',
@@ -111,7 +109,7 @@ function initCoinPiles() {
 	pcImage.alpha = 0.3;
 	pcImage.visible = false;
 
-	pcCoinPile.amount = random(0, 100);
+	pcCoinPile.amount = random(0, 10);
 	pcCoinPile.amountText = game.add.text(0, 0, '', {
 		fill: 'white',
 		align: 'center',
@@ -130,8 +128,8 @@ function initCoinPiles() {
 
 function initCoinBags() {
 	coinBags = [];
-	for (var i = 0; i < COIN_BAGS_COUNT; i++) {
-		var bag = {};
+	for (let i = 0; i < COIN_BAGS_COUNT; i++) {
+		let bag = {};
 		bag.index = i;
 		bag.active = false;
 
@@ -144,7 +142,7 @@ function initCoinBags() {
 		bag.bagImage.alpha = 0.7;
 		bag.bagImage.inputEnabled = true;
 		bag.bagImage.events.onInputDown.add(function (img, pointer) {
-			for (var j = 0; j < coinBags.length; j++) {
+			for (let j = 0; j < coinBags.length; j++) {
 				if (img.reference !== coinBags[j]) {
 					coinBags[j].active = false;
 					coinBags[j].bagImage.alpha = 0.7;
@@ -167,7 +165,7 @@ function initCoinBags() {
 		});
 		bag.bagImage.visible = false;
 
-		bag.amount = random(1, 30);
+		bag.amount = random(1, 10);
 		bag.amountText = game.add.text(0, 0, '', {
 			fill: 'white',
 			align: 'center',
@@ -195,7 +193,7 @@ function initCoinBags() {
 		bag.arrowImage.events.onInputDown.add(function (img) {
 			onArrowImageClick(img, 'human');
 			if (!canMakeAction('pc')) {
-				updateGameInfoText('Game over, you win!', 'green');
+				updateGameInfoText('Game over, you win!', 'white');
 			} else {
 				onComputerTurn();
 			}
@@ -247,7 +245,7 @@ function drawCoinPiles() {
 }
 
 function drawCoinBags() {
-	for (var i = 0; i < coinBags.length; i++) {
+	for (let i = 0; i < coinBags.length; i++) {
 		drawCoinBag(coinBags[i]);
 	}
 }
@@ -277,7 +275,7 @@ function drawCoinBag(bag) {
 }
 
 function onCoinBagDecrease(bag) {
-	var amount = bag.coinChangeAmount - 1;
+	let amount = bag.coinChangeAmount - 1;
 	if (isCoinChangeAmountAllowed(bag, amount)) {
 		bag.coinChangeAmount = amount;
 	}
@@ -285,7 +283,7 @@ function onCoinBagDecrease(bag) {
 }
 
 function onCoinBagIncrease(bag) {
-	var amount = bag.coinChangeAmount + 1;
+	let amount = bag.coinChangeAmount + 1;
 	if (isCoinChangeAmountAllowed(bag, amount)) {
 		bag.coinChangeAmount = amount;
 	}
@@ -304,7 +302,7 @@ function isCoinChangeAmountAllowed(bag, amount) {
 }
 
 function onArrowImageClick(img, type) {
-	var currentCoinPile = null;
+	let currentCoinPile = null;
 	if (type === 'human') {
 		currentCoinPile = humanCoinPile;
 	} else if (type === 'pc') {
@@ -314,25 +312,17 @@ function onArrowImageClick(img, type) {
 		currentCoinPile.amount -= img.reference.coinChangeAmount;
 		img.reference.amount += img.reference.coinChangeAmount;
 		img.reference.coinChangeAmount = 0;
-		lastHumanAction = {
-			index: img.reference.index,
-			amount: img.reference.coinChangeAmount
-		};
 	} else if (img.reference.coinChangeAmount < 0) {
 		currentCoinPile.amount += -img.reference.coinChangeAmount;
 		img.reference.amount -= -img.reference.coinChangeAmount;
 		img.reference.coinChangeAmount = 0;
-		lastHumanAction = {
-			index: img.reference.index,
-			amount: img.reference.coinChangeAmount
-		};
 	}
 	drawCoinBag(img.reference);
 	drawCoinPiles();
 }
 
 function onComputerTurn() {
-	for (var i = 0; i < coinBags.length; i++) {
+	for (let i = 0; i < coinBags.length; i++) {
 		coinBags[i].bagImage.inputEnabled = false;
 		coinBags[i].arrowImage.inputEnabled = false;
 		coinBags[i].bagImage.alpha = 0.7;
@@ -342,18 +332,13 @@ function onComputerTurn() {
 	pcImage.alpha = 1.0;
 	pcCoinPile.pileImage.alpha = 1.0;
 	game.time.events.add(Phaser.Timer.SECOND * 2, function () {
-		var optimalTurn = getOptimalTurn();
-		if (optimalTurn.amount > 0) {
-			coinBags[optimalTurn.index].coinChangeAmount = optimalTurn.amount;
-		} else {
-			coinBags[optimalTurn.index].coinChangeAmount = -optimalTurn.amount;
-		}
+		let optimalTurn = getComputerOptimalTurn();
+		coinBags[optimalTurn.index].coinChangeAmount = optimalTurn.amount;
 		coinBags[optimalTurn.index].bagImage.alpha = 1.0;
 		drawCoinBag(coinBags[optimalTurn.index]);
 		game.time.events.add(Phaser.Timer.SECOND * 5, function () {
-			lastPcAction = optimalTurn;
 			onArrowImageClick(coinBags[optimalTurn.index].arrowImage, 'pc');
-			for (var i = 0; i < coinBags.length; i++) {
+			for (let i = 0; i < coinBags.length; i++) {
 				coinBags[i].bagImage.inputEnabled = true;
 				coinBags[i].arrowImage.inputEnabled = true;
 				coinBags[i].bagImage.alpha = 0.7;
@@ -364,31 +349,20 @@ function onComputerTurn() {
 			pcCoinPile.pileImage.alpha = 0.3;
 
 			if (!canMakeAction('human')) {
-				updateGameInfoText('Game over, you lost!', 'red');
+				updateGameInfoText('Game over, you lost!', 'white');
 			}
 		});
 	});
 }
 
-function getOptimalTurn() {
-	if (lastHumanAction.amount > 0 && lastPcAction !== undefined) {
-		return {
-			index: lastHumanAction.index,
-			amount: -lastHumanAction.amount
-		}
-	}
-	var amount = 0, index = -1, xor = 0;
-
-	for (var i = 0; i < coinBags.length; i++) {
+function getComputerOptimalTurn() {
+	let amount = 0, index = -1, xor = 0;
+	for (let i = 0; i < coinBags.length; i++) {
 		xor = xor ^ coinBags[i].amount;
 	}
-	for (var i = 0; i < coinBags.length; i++) {
-		for (var j = 1; j <= coinBags[i].amount; j++) {
-			if (index === -1) {
-				amount = j;
-				index = i;
-			}
-			var currentXor = xor;
+	for (let i = 0; i < coinBags.length; i++) {
+		for (let j = 1; j <= coinBags[i].amount; j++) {
+			let currentXor = xor;
 			currentXor = currentXor ^ coinBags[i].amount;
 			currentXor = currentXor ^ (coinBags[i].amount - j);
 			if (currentXor === 0 && j > amount) {
@@ -397,9 +371,49 @@ function getOptimalTurn() {
 			}
 		}
 	}
+	if (index !== -1) {
+		amount = -amount;
+	}
 	if (index === -1) {
-		index = 0;
-		amount = pcCoinPile.amount;
+		for (let i = 0; i < coinBags.length; i++) {
+			for (let j = 1; j <= pcCoinPile.amount; j++) {
+				let currentXor = xor;
+				currentXor = currentXor ^ coinBags[i].amount;
+				currentXor = currentXor ^ (coinBags[i].amount + j);
+				if (currentXor === 0 && j > amount) {
+					amount = j;
+					index = i;
+				}
+			}
+		}
+	}
+	if (index === -1) {
+		let canAdd = false, canTakeOut = false;
+		for (let i = 0; i < coinBags.length; i++) {
+			if (coinBags[i].amount > 0) {
+				canTakeOut = true;
+				break;
+			}
+		}
+		if (pcCoinPile.amount > 0) {
+			canAdd = true;
+		}
+		if (canAdd && canTakeOut) {
+			let randomValue = random(0, 1);
+			let randomMove = randomValue === 0 ? getPcAddCoinsRandom() : getPcTakeOutCoinsRandom();
+			index = randomMove.index;
+			amount = randomValue === 0 ? randomMove.amount : -randomMove.amount;
+		} else if (canAdd) {
+			let randomMove = getPcAddCoinsRandom();
+			index = randomMove.index;
+			amount = randomMove.amount;
+		} else if (canTakeOut) {
+			let randomMove = getPcTakeOutCoinsRandom();
+			index = randomMove.index;
+			amount = -randomMove.amount;
+		} else {
+			console.log('illegal state');
+		}
 	}
 	return {
 		index: index,
@@ -407,15 +421,38 @@ function getOptimalTurn() {
 	};
 }
 
+function getPcAddCoinsRandom() {
+	let index = random(0, coinBags.length - 1);
+	let amount = random(1, pcCoinPile.amount);
+	return {
+		index: index,
+		amount: amount
+	}
+}
+
+function getPcTakeOutCoinsRandom() {
+	let nonZeroCoinBags = [];
+	for (let i = 0; i < coinBags.length; i++) {
+		if (coinBags[i].amount > 0) {
+			nonZeroCoinBags.push(coinBags[i]);
+		}
+	}
+	let index = random(0, nonZeroCoinBags.length - 1);
+	let amount = random(1, nonZeroCoinBags[index].amount);
+	return {
+		index: index,
+		amount: amount
+	}
+}
+
 function updateGameInfoText(text, color) {
 	gameInfoText.text = text;
 	gameInfoText.style.fill = color;
 	gameInfoText.updateLayout();
-	console.log(gameInfoText);
 }
 
 function canMakeAction(type) {
-	for (var i = 0; i < coinBags.length; i++) {
+	for (let i = 0; i < coinBags.length; i++) {
 		if (coinBags[i].amount > 0) {
 			return true;
 		}
@@ -432,7 +469,7 @@ function random(fromNumber, toNumber, toExclude) {
 	if (toExclude === undefined) {
 		toExclude = [];
 	}
-	var r = game.rnd.between(fromNumber, toNumber);
+	let r = game.rnd.between(fromNumber, toNumber);
 	while (toExclude.indexOf(r) !== -1) {
 		r = game.rnd.between(fromNumber, toNumber);
 	}

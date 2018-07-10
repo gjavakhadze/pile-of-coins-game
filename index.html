@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8"/>
-	<title>Vertical Rooks</title>
+	<title>Pile Of Coins</title>
 
 	<link type="text/css" rel="stylesheet" href="css/style.css"/>
 	<script type="text/javascript" src="js/phaser.js"></script>
@@ -11,12 +11,9 @@
 
 <script type="text/javascript" src="js/Game.js"></script>
 <div class="instructions">
-	It is a game played between two players who make moves in turns until one of them cannot make any move. The player who cannot make a move loses the game and the other player is declared the
-	winner. The game is played on a board with rows and columns. The only pieces used in the game are rooks. A rook in HackerChess moves only vertically, which means that in never leaves a column to
-	which it belongs. Moreover, in a single move, a rook moves through any number of unoccupied cells. Notice that there are no captures in HackerChess, two rooks cannot occupy the same cell, and a
-	rook cannot jump over another rook. Each player has exactly one rook in each of the columns of the board.
-
-	Given the initial position of the rooks and knowing that the second player makes the first move, decide who will win the game if both players play optimally.
+	It is a game played between you and computer, who make moves in turns until one of them cannot make any move. The player who cannot make a move loses the game and the other player is declared the
+	winner. The game is played with several pile of coins. Each turn player can take out nonzero coins from one of the pile, or add already taken coins to one of the pile. Given the initial state of game,
+	with several pile of coins, already taken out coins by players and you have to win the game. You move first.
 </div>
 <div class="wrapper"></div>
 
