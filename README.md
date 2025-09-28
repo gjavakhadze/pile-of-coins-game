@@ -5,4 +5,4 @@ Game controls:
 * N times right mouse click - Put in N coins to this pile
 * To confirm action, click rendered up/down arrow icon on top of the pile
 
-https://ja0.github.io/pile-of-coins-game/index.html
+[Click to play](https://gjavakhadze.github.io/pile-of-coins-game)
